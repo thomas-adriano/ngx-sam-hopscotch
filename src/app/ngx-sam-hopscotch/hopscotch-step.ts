@@ -1,30 +1,30 @@
 export class HopscotchStep {
-  private _title: string;
-  private _content: string;
-  private _target: Element | string;
-  private _targetplacement: "top" | "bottom" | "right" | "left";
+  public title: string;
+  public content: string;
+  public target: Element | string;
+  public placement: "top" | "bottom" | "right" | "left" = "bottom";
 
   constructor() {}
 
-  title(title: string): HopscotchStep {
-    this._title = title;
+  setTitle(title: string): HopscotchStep {
+    this.title = title;
     return this;
   }
 
-  content(content: string): HopscotchStep {
-    this._content = content;
+  setContent(content: string): HopscotchStep {
+    this.content = content;
     return this;
   }
 
-  target(target: Element | string): HopscotchStep {
-    this._target = target;
+  setTarget(target: Element | string): HopscotchStep {
+    this.target = target;
     return this;
   }
 
-  targetplacement(
+  setPlacement(
     targetplacement: "top" | "bottom" | "right" | "left"
   ): HopscotchStep {
-    this._targetplacement = targetplacement;
+    this.placement = targetplacement;
     return this;
   }
 }

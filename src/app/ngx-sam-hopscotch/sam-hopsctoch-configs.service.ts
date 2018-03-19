@@ -1,8 +1,8 @@
 import { Injectable } from "@angular/core";
 import { HopscotchStep } from "./hopscotch-step";
 import { HopscotchTour } from "./hopscotch-tour";
+import hopscotch from "hopscotch";
 
-declare const hopscotch;
 @Injectable()
 export class SamHopsctochConfigsService {
   private tour = new HopscotchTour();
@@ -11,6 +11,7 @@ export class SamHopsctochConfigsService {
 
   public addStep(step: HopscotchStep): SamHopsctochConfigsService {
     this.tour.addStep(step);
+    console.log("all steps: ", this.tour);
     return this;
   }
 
@@ -19,6 +20,8 @@ export class SamHopsctochConfigsService {
   }
 
   public startTour() {
-    hopscotch.startTour(this.tour);
+    setTimeout(() => {
+      hopscotch.startTour(this.tour);
+    });
   }
 }

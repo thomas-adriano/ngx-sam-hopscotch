@@ -45,10 +45,7 @@
   "ngPackage": {
     "lib": {
       "entryFile": "src/app/ngx-sam-hopscotch/ngx-sam-hopscotch.module.ts",
-      "cssUrl": "inline",
-      "embedded": [
-        "hopscotch"
-      ]
+      "cssUrl": "inline"
     }
   }
 }
