@@ -5,8 +5,13 @@
   "scripts": {
     "ng": "ng",
     "start": "echo noop",
-    "build": "ng-packagr -p package.json && npm run copyHopscotchCss",
-    "copyHopscotchCss": "cp node_modules/hopscotch/dist/css/hopscotch.css dist/hopscotch.css",
+    "build":
+      "ng-packagr -p package.json && npm run copyHopscotchCss && npm run copyHopscotchCssMin && npm run copyHopscotchImgs",
+    "copyHopscotchCss":
+      "mkdir -p dist/css && cp node_modules/hopscotch/dist/css/hopscotch.css dist/css/hopscotch.css",
+    "copyHopscotchCssMin":
+      "mkdir -p dist/css && cp node_modules/hopscotch/dist/css/hopscotch.min.css dist/css/hopscotch.min.css",
+    "copyHopscotchImgs": "mkdir -p dist/img && cp node_modules/hopscotch/dist/img/* dist/img",
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e"
@@ -53,11 +58,9 @@
   },
   "ngPackage": {
     "lib": {
-      "entryFile": "src/app/ngx-sam-hopscotch/ngx-sam-hopscotch.module.ts",
+      "entryFile": "src/index.ts",
       "cssUrl": "inline",
-      "embedded": [
-        "hopscotch"
-      ],
+      "embedded": ["hopscotch"],
       "umdModuleIds": {
         "hopscotch": "hopscotch"
       }

@@ -1,4 +1,4 @@
-import { Hopscotch_i18n } from "./hopscotch-i18n";
+import { Hopscotch_i18n } from './hopscotch-i18n';
 
 export class HopscotchConfigOption {
   id: string;
@@ -20,4 +20,5 @@ export class HopscotchConfigOption {
   onClose: Function;
   onError: Function;
   i18n: Hopscotch_i18n;
+  fadeBackground: boolean;
 }

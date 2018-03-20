@@ -23,5 +23,5 @@ export class HopscotchStep {
   public target: Element | string;
   public stepNumber = 0;
 
-  constructor(public placement: "top" | "bottom" | "right" | "left" = "bottom") { }
+  constructor(public placement: 'top' | 'bottom' | 'right' | 'left' = 'bottom') { }
 }
