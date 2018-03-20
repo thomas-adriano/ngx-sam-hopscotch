@@ -1,7 +1,7 @@
 import { HopscotchStep } from "./hopscotch-step";
 
 export class HopscotchTour {
-  public static readonly DEFAULT_ID = "ngx-sam-hopscotch-tour-id";
+  public static readonly DEFAULT_ID = "ngx-sam-hopscotch-tour-id-" + HopscotchTour.getRandom(0, 999999);
   public id = HopscotchTour.DEFAULT_ID;
   public steps = new Array<HopscotchStep>();
 
@@ -19,10 +19,14 @@ export class HopscotchTour {
     if (!step) {
       return;
     }
-    this.steps.push(Object.assign(new HopscotchStep(), step));
+    this.steps.push(Object.assign(new HopscotchStep(step.target, step.placement), step));
   }
 
   public getSteps(): Array<HopscotchStep> {
-    return this.steps.map(e => Object.assign(new HopscotchStep(), e));
+    return this.steps.map(e => Object.assign(new HopscotchStep(e.target, e.placement), e));
+  }
+
+  private static getRandom(min, max) {
+    return Math.random() * (max - min) + min;
   }
 }

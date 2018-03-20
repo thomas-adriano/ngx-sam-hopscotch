@@ -1,30 +1,25 @@
 export class HopscotchStep {
   public title: string;
   public content: string;
-  public target: Element | string;
-  public placement: "top" | "bottom" | "right" | "left" = "bottom";
+  public width: number;
+  public padding: number;
+  public xOffset: number | 'center';
+  public yOffset: number | 'center';
+  public arrowOffset: number | 'center';
+  public delay: number;
+  public zindex: number;
+  public showNextButton: boolean;
+  public showPrevButton: boolean;
+  public showCTAButton: boolean;
+  public ctaLabel: string;
+  public multipage: boolean;
+  public showSkip: boolean;
+  public fixedElement: boolean;
+  public nextOnTargetClick: boolean;
+  public onPrev: Function;
+  public onNext: Function;
+  public onShow: Function;
+  public onCTA: Function;
 
-  constructor() {}
-
-  setTitle(title: string): HopscotchStep {
-    this.title = title;
-    return this;
-  }
-
-  setContent(content: string): HopscotchStep {
-    this.content = content;
-    return this;
-  }
-
-  setTarget(target: Element | string): HopscotchStep {
-    this.target = target;
-    return this;
-  }
-
-  setPlacement(
-    targetplacement: "top" | "bottom" | "right" | "left"
-  ): HopscotchStep {
-    this.placement = targetplacement;
-    return this;
-  }
+  constructor(public target: Element | string, public placement: "top" | "bottom" | "right" | "left" = "bottom") { }
 }
