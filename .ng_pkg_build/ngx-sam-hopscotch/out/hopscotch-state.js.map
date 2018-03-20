@@ -1,1 +1,0 @@
-{"version":3,"file":"hopscotch-state.js","sourceRoot":"","sources":["hopscotch-state.ts"],"names":[],"mappings":";;;;AAAA,MAAM;;;;;IAEJ,YAAmB,MAAc,EAAS,cAAsB;QAA7C,WAAM,GAAN,MAAM,CAAQ;QAAS,mBAAc,GAAd,cAAc,CAAQ;KAAK;CAEtE","sourcesContent":["export class HopscotchState {\n\n  constructor(public tourId: string, public tourStepNumber: number) { }\n\n}\n"]}
