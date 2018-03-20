@@ -8,6 +8,7 @@ import {
 } from "@angular/core";
 import { SamHopsctochConfigsService } from "./sam-hopsctoch-configs.service";
 import { HopscotchStep } from "./hopscotch-step";
+import { LibEventsService } from "./lib-events.service";
 
 @Directive({
   selector: "[samHopscotchStep]"
@@ -17,10 +18,19 @@ export class SamHopscotchStepDirective implements OnInit, OnChanges {
 
   constructor(
     private el: ElementRef,
-    private hopsctochConfigs: SamHopsctochConfigsService
-  ) {}
+    private hopsctochConfigs: SamHopsctochConfigsService,
+    private libEventsService: LibEventsService
+  ) {
+    this.libEventsService.hopscotchStepCreated().emit();
+  }
 
-  ngOnInit() {}
+  ngOnInit() {
+    this.libEventsService.hopscotchStarted().subscribe(() => {
+      this.hopsctochConfigs.addStep(this.step);
+      this.libEventsService.hopscotchStepInitialized().emit();
+      console.log(this.hopsctochConfigs.getTour());
+    });
+  }
 
   ngOnChanges() {
     if (!this.step) {
@@ -29,27 +39,7 @@ export class SamHopscotchStepDirective implements OnInit, OnChanges {
     if (!this.step.target) {
       this.step.target = this.el.nativeElement;
     }
-    console.log(this.step);
-    const a = this.hopsctochConfigs.addStep(this.step);
   }
-
-  // const tour = {
-  //   id: "hello-hopscotch",
-  //   steps: [
-  //     {
-  //       title: "My Header",
-  //       content: "This is the header of my page.",
-  //       target: "header",
-  //       placement: "right"
-  //     },
-  //     {
-  //       title: "My content",
-  //       content: "Here is where I put my content.",
-  //       target: document.querySelector("#content p"),
-  //       placement: "bottom"
-  //     }
-  //   ]
-  // };
 
   @HostListener("mouseenter")
   onMouseEnter() {

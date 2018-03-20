@@ -5,31 +5,38 @@
   "scripts": {
     "ng": "ng",
     "start": "echo noop",
-    "build": "ng-packagr -p package.json",
+    "build": "ng-packagr -p package.json && npm run copyHopscotchCss",
+    "copyHopscotchCss": "cp node_modules/hopscotch/dist/css/hopscotch.css dist/hopscotch.css",
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e"
   },
   "private": true,
-  "dependencies": {
+  "peerDependencies": {
     "@angular/common": "^5.2.0",
-    "@angular/compiler": "^5.2.0",
-    "@angular/core": "^5.2.0",
-    "@angular/platform-browser-dynamic": "^5.2.0",
+    "@angular/core": "^5.2.0"
+  },
+  "dependencies": {
+    "@angular/common": "^5.2.9",
+    "@angular/core": "^5.2.9",
     "core-js": "^2.4.1",
     "hopscotch": "^0.3.1",
-    "ng-packagr": "^2.2.0",
     "rxjs": "^5.5.6",
     "zone.js": "^0.8.19"
   },
   "devDependencies": {
     "@angular/cli": "1.6.6",
+    "@angular/compiler": "^5.2.9",
     "@angular/compiler-cli": "^5.2.0",
     "@angular/language-service": "^5.2.0",
+    "@angular/platform-browser": "^5.2.9",
+    "@angular/platform-browser-dynamic": "^5.2.9",
     "@types/jasmine": "~2.8.3",
     "@types/jasminewd2": "~2.0.2",
     "@types/node": "~6.0.60",
+    "ajv": "^6.3.0",
     "codelyzer": "^4.0.1",
+    "i": "^0.3.6",
     "jasmine-core": "~2.8.0",
     "jasmine-spec-reporter": "~4.2.1",
     "karma": "~2.0.0",
@@ -37,6 +44,8 @@
     "karma-coverage-istanbul-reporter": "^1.2.1",
     "karma-jasmine": "~1.1.0",
     "karma-jasmine-html-reporter": "^0.2.2",
+    "ng-packagr": "^2.2.0",
+    "npm": "^5.7.1",
     "protractor": "~5.1.2",
     "ts-node": "~4.1.0",
     "tslint": "~5.9.1",
@@ -45,7 +54,13 @@
   "ngPackage": {
     "lib": {
       "entryFile": "src/app/ngx-sam-hopscotch/ngx-sam-hopscotch.module.ts",
-      "cssUrl": "inline"
+      "cssUrl": "inline",
+      "embedded": [
+        "hopscotch"
+      ],
+      "umdModuleIds": {
+        "hopscotch": "hopscotch"
+      }
     }
   }
 }

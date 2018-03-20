@@ -20,6 +20,8 @@ export class HopscotchStep {
   public onNext: Function;
   public onShow: Function;
   public onCTA: Function;
+  public target: Element | string;
+  public stepNumber = 0;
 
-  constructor(public target: Element | string, public placement: "top" | "bottom" | "right" | "left" = "bottom") { }
+  constructor(public placement: "top" | "bottom" | "right" | "left" = "bottom") { }
 }

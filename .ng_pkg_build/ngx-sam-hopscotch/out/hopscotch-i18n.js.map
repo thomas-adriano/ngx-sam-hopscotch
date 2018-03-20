@@ -1,0 +1,1 @@
+{"version":3,"file":"hopscotch-i18n.js","sourceRoot":"","sources":["hopscotch-i18n.ts"],"names":[],"mappings":";;;;AAAA,MAAM;CAOL","sourcesContent":["export class Hopscotch_i18n {\n  public nextBtn: string;\n  public prevBtn: string;\n  public doneBtn: string;\n  public skipBtn: string;\n  public closeTooltip: string;\n  public stepNums: string[];\n}\n"]}

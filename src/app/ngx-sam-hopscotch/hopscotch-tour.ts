@@ -19,14 +19,14 @@ export class HopscotchTour {
     if (!step) {
       return;
     }
-    this.steps.push(Object.assign(new HopscotchStep(step.target, step.placement), step));
+    this.steps.push(Object.assign(new HopscotchStep(step.placement), step));
   }
 
   public getSteps(): Array<HopscotchStep> {
-    return this.steps.map(e => Object.assign(new HopscotchStep(e.target, e.placement), e));
+    return this.steps.map(e => Object.assign(new HopscotchStep(e.placement), e));
   }
 
   private static getRandom(min, max) {
-    return Math.random() * (max - min) + min;
+    return Math.floor(Math.random() * (max - min) + min);
   }
 }

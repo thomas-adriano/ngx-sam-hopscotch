@@ -5,31 +5,60 @@ import hopscotch from "hopscotch";
 import { HopscotchConfigOption } from "./hopscotch-config-option";
 import { Observable } from 'rxjs/Observable';
 import { HopscotchState } from "./hopscotch-state";
+import { LibEventsService } from "./lib-events.service";
 
 /**
  * http://linkedin.github.io/hopscotch/#all-step-options
 */
 @Injectable()
 export class SamHopsctochConfigsService {
-  private tour = new HopscotchTour();
+  private tour: HopscotchTour;
+  private directiveCreatedSteps = 0;
+  private directiveInitializedSteps = 0;
 
-  constructor() { }
+  constructor(public libEventsService: LibEventsService) {
+    libEventsService.hopscotchStepCreated().subscribe(() => {
+      this.directiveCreatedSteps++;
+    });
+    libEventsService.hopscotchStepInitialized().subscribe(() => {
+      this.directiveInitializedSteps++;
+    });
+  }
 
-  public addStep(step: HopscotchStep): SamHopsctochConfigsService {
-    this.tour.addStep(step);
-    return this;
+  public addStep(step: HopscotchStep) {
+    this.getTour().addStep(step);
+  }
+
+  public setTour(tour: HopscotchTour) {
+    this.tour = tour;
   }
 
   public getTour(): HopscotchTour {
+    if (!this.tour) {
+      this.tour = new HopscotchTour();
+    }
     return this.tour;
   }
 
-  public startTour(stepNum?: number) {
-    if (stepNum) {
-      hopscotch.startTour(this.tour, stepNum);
+  public startTour(tour?: HopscotchTour, stepNum?: number) {
+    this.libEventsService.hopscotchStarted().emit();
+    this.doStartTour(tour, stepNum);
+  }
+
+  private doStartTour(tour?: HopscotchTour, stepNum?: number) {
+    if (this.directiveCreatedSteps > this.directiveInitializedSteps) {
+      setTimeout(() => { this.doStartTour(tour, stepNum) }, 5);
     } else {
-      hopscotch.startTour(this.tour);
-    };
+      if (stepNum !== undefined && tour !== undefined) {
+        hopscotch.startTour(tour, stepNum);
+      } else if (stepNum === undefined && tour === undefined) {
+        hopscotch.startTour(this.getTour());
+      } else if (stepNum !== undefined && tour === undefined) {
+        hopscotch.startTour(this.getTour(), stepNum);
+      } else if (stepNum === undefined && tour !== undefined) {
+        hopscotch.startTour(tour);
+      };
+    }
   }
 
   public showStep(idx: number) {
@@ -87,7 +116,7 @@ export class SamHopsctochConfigsService {
     })
   }
 
-  public removeCallbacks(eventName?: 'start' | 'end' | 'next' | 'prev' | 'show' | 'close' | 'error', tourOnly?: boolean): Observable<any> {
+  public removeCallbacks(eventName?: 'start' | 'end' | 'next' | 'prev' | 'show' | 'close' | 'error', tourOnly?: boolean) {
     // Remove callbacks for hopscotch events. If tourOnly is set to true,
     // only removes callbacks specified by a tour (callbacks set by
     // hopscotch.configure or hopscotch.listen will remain).
