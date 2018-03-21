@@ -31,54 +31,58 @@ export class HopsctochWrapperService {
 
   public startTour(tour?: HopscotchTour, stepNum?: number) {
     if (this.options && this.options.fadeBackground) {
-      let prevOverlay: HTMLElement;
+      const backgroundCanvasId = 'ngx-sam-hopscotch-bg-canvas';
+      let backgroundCanvasEl: HTMLCanvasElement;
+      let backgroundCanvasCtx: CanvasRenderingContext2D;
+
       this.listen('show').subscribe(data => {
         const currStep = this.getTour().getSteps()[this.getCurrStepNum()];
-        let targetEl = currStep.target;
-        if (typeof targetEl === 'string') {
+        console.log(currStep);
+        let targetStepEl = currStep.target;
+        if (typeof targetStepEl === 'string') {
           try {
-            targetEl = document.getElementById(targetEl) as HTMLElement;
+            targetStepEl = document.getElementById(targetStepEl) as HTMLElement;
           } catch (e) {
             // não é um HTMLElement válido, pula
           }
         }
 
-        if (targetEl instanceof HTMLElement) {
-          console.log(targetEl.getBoundingClientRect());
-          const overlayEl = document.createElement('canvas');
-          overlayEl.id = 'ngx-sam-hopscotch-overlay';
-          overlayEl.style.cssText = `
-            position: fixed;
-            width: 100vw;
-            height: 100vh;
-            bottom: 0;
-            left: 0;
-            z-index: 1000;
-          `;
-          const conext2d = overlayEl.getContext('2d');
-          const targetElBoundingClientRect = targetEl.getBoundingClientRect();
+        if (targetStepEl instanceof HTMLElement) {
+          const targetElBoundingClientRect = targetStepEl.getBoundingClientRect();
           const devicePixelRatio = window.devicePixelRatio || 1;
-          overlayEl.width = window.innerWidth * devicePixelRatio;
-          overlayEl.height = window.innerHeight * devicePixelRatio;
-          conext2d.strokeRect(
-            targetElBoundingClientRect.left,
-            targetElBoundingClientRect.top,
-            targetElBoundingClientRect.width,
-            targetElBoundingClientRect.height
-          );
 
-          conext2d.scale(devicePixelRatio, devicePixelRatio);
+          const prevCanvas = document.getElementById(backgroundCanvasId) as HTMLCanvasElement;
 
-          prevOverlay = document.getElementById('ngx-sam-hopscotch-overlay');
-          if (!prevOverlay) {
-            document.body.appendChild(overlayEl);
+          if (prevCanvas) {
+            this.updateCanvasMask(backgroundCanvasEl, backgroundCanvasCtx, targetElBoundingClientRect);
+          } else {
+            backgroundCanvasEl = document.createElement('canvas');
+            backgroundCanvasCtx = backgroundCanvasEl.getContext('2d');
+
+            backgroundCanvasEl.id = backgroundCanvasId;
+            backgroundCanvasEl.style.cssText = `
+              position: fixed;
+              width: 100vw;
+              height: 100vh;
+              bottom: 0;
+              left: 0;
+              z-index: 1000;
+              opacity: ${this.options.fadeBackgroundColorAlpha};
+            `;
+            backgroundCanvasEl.width = window.innerWidth * devicePixelRatio;
+            backgroundCanvasEl.height = window.innerHeight * devicePixelRatio;
+            backgroundCanvasCtx.scale(devicePixelRatio, devicePixelRatio);
+            this.updateCanvasMask(backgroundCanvasEl, backgroundCanvasCtx, targetElBoundingClientRect);
+
+            document.body.appendChild(backgroundCanvasEl);
           }
+
         }
       });
 
       this.listen('end').subscribe(data => {
-        if (prevOverlay) {
-          document.body.removeChild(prevOverlay);
+        if (document.getElementById(backgroundCanvasId)) {
+          document.body.removeChild(backgroundCanvasEl);
         }
       });
     }
@@ -93,6 +97,25 @@ export class HopsctochWrapperService {
       this.setTour(tour);
       hopscotch.startTour(tour);
     }
+  }
+
+  private updateCanvasMask(backgroundCanvasMaskEl: HTMLCanvasElement,
+    backgroundCanvasMaskCtx: CanvasRenderingContext2D,
+    targetElBoundingClientRect: ClientRect) {
+    // This color is the one of the filled shape
+    backgroundCanvasMaskCtx.clearRect(0, 0, backgroundCanvasMaskEl.width, backgroundCanvasMaskEl.height);
+
+    backgroundCanvasMaskCtx.globalCompositeOperation = 'xor';
+    backgroundCanvasMaskCtx.fillStyle = this.options.fadeBackgroundColorHex || 'rgba(0, 0, 0, 1)';
+    backgroundCanvasMaskCtx.fillRect(0, 0, backgroundCanvasMaskEl.width, backgroundCanvasMaskEl.height);
+
+    backgroundCanvasMaskCtx.fillStyle = this.options.fadeBackgroundColorHex || 'rgba(0, 0, 0, 1)';
+    backgroundCanvasMaskCtx.fillRect(
+      targetElBoundingClientRect.left - 10,
+      targetElBoundingClientRect.top - 10,
+      targetElBoundingClientRect.width + 20,
+      targetElBoundingClientRect.height + 20
+    );
   }
 
   public showStep(idx: number) {

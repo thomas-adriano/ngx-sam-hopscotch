@@ -21,4 +21,6 @@ export class HopscotchConfigOption {
   onError: Function;
   i18n: Hopscotch_i18n;
   fadeBackground: boolean;
+  fadeBackgroundColorHex = '#AAAAAA';
+  fadeBackgroundColorAlpha = 0.2;
 }
