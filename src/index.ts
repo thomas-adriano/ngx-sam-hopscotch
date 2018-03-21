@@ -1,7 +1,7 @@
 export { HopscotchStep } from './app/core/model/hopscotch-step';
 export { HopscotchState } from './app/core/model/hopscotch-state';
 export { HopscotchTour } from './app/core/model/hopscotch-tour';
-export { HopscotchConfigOption } from './app/core/model/hopscotch-config-option';
+export { HopscotchConfigOptions } from './app/core/model/hopscotch-config-options';
 export { Hopscotch_i18n } from './app/core/model/hopscotch-i18n';
 export {
   HopsctochWrapperService

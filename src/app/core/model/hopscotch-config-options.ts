@@ -1,6 +1,6 @@
 import { Hopscotch_i18n } from './hopscotch-i18n';
 
-export class HopscotchConfigOption {
+export class HopscotchConfigOptions {
   id: string;
   bubbleWidth: number;
   bubblePadding: number;
@@ -22,5 +22,5 @@ export class HopscotchConfigOption {
   i18n: Hopscotch_i18n;
   fadeBackground: boolean;
   fadeBackgroundColorHex = '#AAAAAA';
-  fadeBackgroundColorAlpha = 0.2;
+  fadeBackgroundColorAlpha = 0.3;
 }

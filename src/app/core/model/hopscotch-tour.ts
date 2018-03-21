@@ -3,8 +3,8 @@ import { HopscotchStep } from './hopscotch-step';
 export class HopscotchTour {
   public static readonly DEFAULT_ID = 'ngx-sam-hopscotch-tour-id-' +
     HopscotchTour.getRandom(0, 999999);
-  public id = HopscotchTour.DEFAULT_ID;
-  private steps = new Array<HopscotchStep>();
+  private _id = HopscotchTour.DEFAULT_ID;
+  private _steps = new Array<HopscotchStep>();
 
   constructor(id?: string) {
     if (id) {
@@ -16,20 +16,23 @@ export class HopscotchTour {
     return Math.floor(Math.random() * (max - min) + min);
   }
 
-  public setId(id: string) {
-    this.id = id;
+  public set id(id: string) {
+    this._id = id;
+  }
+
+  public get id() {
+    return this._id;
   }
 
   public addStep(step: HopscotchStep) {
     if (!step) {
       return;
     }
-    this.steps.push(Object.assign(new HopscotchStep(step.placement), step));
+    this._steps.push(step);
+    this._steps = this._steps.sort((a, b) => a.stepNumber - b.stepNumber);
   }
 
-  public getSteps(): Array<HopscotchStep> {
-    return this.steps
-      .map(e => Object.assign(new HopscotchStep(e.placement), e))
-      .sort((a, b) => a.stepNumber - b.stepNumber);
+  public get steps(): Array<HopscotchStep> {
+    return this._steps;
   }
 }

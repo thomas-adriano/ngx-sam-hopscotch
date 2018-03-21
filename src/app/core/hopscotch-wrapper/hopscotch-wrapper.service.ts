@@ -1,120 +1,223 @@
 import { Injectable } from '@angular/core';
 import hopscotch from 'hopscotch';
 import { Observable } from 'rxjs/Observable';
-import { HopscotchConfigOption } from '../model/hopscotch-config-option';
+import { HopscotchConfigOptions } from '../model/hopscotch-config-options';
 import { HopscotchStep } from '../model/hopscotch-step';
 import { HopscotchTour } from '../model/hopscotch-tour';
 import { HopscotchState } from '../model/hopscotch-state';
+import { OptimizedResizeListenerService } from '../optimized-resize-listener/optimized-resize-listener.service';
+import { Subscription } from 'rxjs/Subscription';
 
 /**
- * http://linkedin.github.io/hopscotch/#all-step-options
+ * Para mais informações sobre configs/API do hopscotch: http://linkedin.github.io/hopscotch/#all-step-options
+ * Este serviço é um wrapper do objeto global 'hopscotch'. Todos os metodos da API oficial são expostas;
  */
 @Injectable()
 export class HopsctochWrapperService {
-  private tour: HopscotchTour;
-  private options: HopscotchConfigOption;
+  private _tour: HopscotchTour;
+  private options: HopscotchConfigOptions;
+  private optimizedResizeSubscription: Subscription;
 
+  constructor(
+    public optimizedResizeListenerService: OptimizedResizeListenerService
+  ) {}
+
+  /**
+   * Adiciona um step ao tour ativo
+   * @param step step a ser adicionado no tour atual
+   */
   public addStep(step: HopscotchStep) {
-    this.getTour().addStep(step);
+    this.tour.addStep(step);
   }
 
-  public setTour(tour: HopscotchTour) {
-    this.tour = tour;
+  public set tour(tour: HopscotchTour) {
+    this._tour = tour;
   }
 
-  public getTour(): HopscotchTour {
-    if (!this.tour) {
-      this.tour = new HopscotchTour();
+  public get tour(): HopscotchTour {
+    if (!this._tour) {
+      this._tour = new HopscotchTour();
     }
-    return this.tour;
+    return this._tour;
   }
 
-  public startTour(tour?: HopscotchTour, stepNum?: number) {
+  /**
+   * Inicia o tour
+   * @param stepNum step (base 1) no qual o tour será iniciado
+   */
+  public startTour(stepNum?: number) {
     if (this.options && this.options.fadeBackground) {
-      const backgroundCanvasId = 'ngx-sam-hopscotch-bg-canvas';
-      let backgroundCanvasEl: HTMLCanvasElement;
-      let backgroundCanvasCtx: CanvasRenderingContext2D;
-
-      this.listen('show').subscribe(data => {
-        const currStep = this.getTour().getSteps()[this.getCurrStepNum()];
-        console.log(currStep);
-        let targetStepEl = currStep.target;
-        if (typeof targetStepEl === 'string') {
-          try {
-            targetStepEl = document.getElementById(targetStepEl) as HTMLElement;
-          } catch (e) {
-            // não é um HTMLElement válido, pula
-          }
-        }
-
-        if (targetStepEl instanceof HTMLElement) {
-          const targetElBoundingClientRect = targetStepEl.getBoundingClientRect();
-          const devicePixelRatio = window.devicePixelRatio || 1;
-
-          const prevCanvas = document.getElementById(backgroundCanvasId) as HTMLCanvasElement;
-
-          if (prevCanvas) {
-            this.updateCanvasMask(backgroundCanvasEl, backgroundCanvasCtx, targetElBoundingClientRect);
-          } else {
-            backgroundCanvasEl = document.createElement('canvas');
-            backgroundCanvasCtx = backgroundCanvasEl.getContext('2d');
-
-            backgroundCanvasEl.id = backgroundCanvasId;
-            backgroundCanvasEl.style.cssText = `
-              position: fixed;
-              width: 100vw;
-              height: 100vh;
-              bottom: 0;
-              left: 0;
-              z-index: 1000;
-              opacity: ${this.options.fadeBackgroundColorAlpha};
-            `;
-            backgroundCanvasEl.width = window.innerWidth * devicePixelRatio;
-            backgroundCanvasEl.height = window.innerHeight * devicePixelRatio;
-            backgroundCanvasCtx.scale(devicePixelRatio, devicePixelRatio);
-            this.updateCanvasMask(backgroundCanvasEl, backgroundCanvasCtx, targetElBoundingClientRect);
-
-            document.body.appendChild(backgroundCanvasEl);
-          }
-
-        }
-      });
-
-      this.listen('end').subscribe(data => {
-        if (document.getElementById(backgroundCanvasId)) {
-          document.body.removeChild(backgroundCanvasEl);
-        }
-      });
+      this.initFadeBackground();
     }
-    if (stepNum !== undefined && tour !== undefined) {
-      this.setTour(tour);
-      hopscotch.startTour(tour, stepNum);
-    } else if (stepNum === undefined && tour === undefined) {
-      hopscotch.startTour(this.getTour());
-    } else if (stepNum !== undefined && tour === undefined) {
-      hopscotch.startTour(this.getTour(), stepNum);
-    } else if (stepNum === undefined && tour !== undefined) {
-      this.setTour(tour);
-      hopscotch.startTour(tour);
+
+    this.doStartTour(stepNum);
+  }
+
+  private initFadeBackground() {
+    const overlayCanvasId = 'ngx-sam-hopscotch-bg-canvas';
+    let overlayCanvasEl: HTMLCanvasElement;
+    let targetStepEl;
+
+    this.listen('show').subscribe(data => {
+      const currStep = this.tour.steps[this.getCurrStepNum()];
+      targetStepEl = currStep.target;
+      if (typeof targetStepEl === 'string') {
+        try {
+          targetStepEl = document.getElementById(targetStepEl) as HTMLElement;
+        } catch (e) {
+          // não é um HTMLElement válido, pula
+        }
+      }
+
+      if (targetStepEl instanceof HTMLElement) {
+        const devicePixelRatio = window.devicePixelRatio || 1;
+
+        const prevCanvas = document.getElementById(
+          overlayCanvasId
+        ) as HTMLCanvasElement;
+
+        if (prevCanvas) {
+          // se o canvas ja existir na dom, basta atualizar seu conteudo
+          this.updateCanvas(overlayCanvasEl, targetStepEl);
+        } else {
+          // se o canvas ainda nao existir na dom, cria e insere
+          overlayCanvasEl = document.createElement('canvas');
+
+          overlayCanvasEl.id = overlayCanvasId;
+          overlayCanvasEl.style.cssText = `
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
+            bottom: 0;
+            left: 0;
+            z-index: 1000;
+            opacity: ${this.options.fadeBackgroundColorAlpha};
+          `;
+          this.updateCanvas(overlayCanvasEl, targetStepEl);
+
+          document.body.appendChild(overlayCanvasEl);
+        }
+      }
+    });
+
+    this.listen('close').subscribe(data => {
+      this.unsubscribeFromOptimizedResize();
+      if (document.getElementById(overlayCanvasId)) {
+        document.body.removeChild(overlayCanvasEl);
+      }
+    });
+    this.listen('error').subscribe(data => {
+      this.unsubscribeFromOptimizedResize();
+      if (document.getElementById(overlayCanvasId)) {
+        document.body.removeChild(overlayCanvasEl);
+      }
+    });
+    this.listen('end').subscribe(data => {
+      this.unsubscribeFromOptimizedResize();
+      if (document.getElementById(overlayCanvasId)) {
+        document.body.removeChild(overlayCanvasEl);
+      }
+    });
+
+    this.optimizedResizeSubscription = this.optimizedResizeListenerService
+      .onOptimizedResize()
+      .subscribe(() => {
+        if (!overlayCanvasEl || !targetStepEl) {
+          return;
+        }
+        // atualiza o canvas quando um evento de resize ocorrer
+        this.updateCanvas(overlayCanvasEl, targetStepEl);
+      });
+  }
+
+  private unsubscribeFromOptimizedResize() {
+    if (this.optimizedResizeSubscription) {
+      this.optimizedResizeSubscription.unsubscribe();
     }
   }
 
-  private updateCanvasMask(backgroundCanvasMaskEl: HTMLCanvasElement,
-    backgroundCanvasMaskCtx: CanvasRenderingContext2D,
-    targetElBoundingClientRect: ClientRect) {
-    // This color is the one of the filled shape
-    backgroundCanvasMaskCtx.clearRect(0, 0, backgroundCanvasMaskEl.width, backgroundCanvasMaskEl.height);
+  private doStartTour(stepNum?: number) {
+    // necessario por a chamada de startTour no onload, mais infos:
+    // https://github.com/linkedin/hopscotch/issues/321
+    window.onload = () => {
+      if (stepNum !== undefined) {
+        // este wrapper utiliza base 1 para denotar ordem de steps
+        // o hopscotch utiliza base 0...
+        stepNum--;
+        hopscotch.startTour(this.tour, stepNum);
+      } else {
+        hopscotch.startTour(this.tour);
+      }
+    };
+  }
 
-    backgroundCanvasMaskCtx.globalCompositeOperation = 'xor';
-    backgroundCanvasMaskCtx.fillStyle = this.options.fadeBackgroundColorHex || 'rgba(0, 0, 0, 1)';
-    backgroundCanvasMaskCtx.fillRect(0, 0, backgroundCanvasMaskEl.width, backgroundCanvasMaskEl.height);
+  /**
+   * Atualiza o canvas para refletir o step atual
+   * @param overlayCanvasEl elemento canvas
+   * @param targetStepEl elemento HTML que será focado
+   */
+  private updateCanvas(
+    overlayCanvasEl: HTMLCanvasElement,
+    targetStepEl: HTMLElement
+  ) {
+    const targetElBoundingClientRect = targetStepEl.getBoundingClientRect();
+    const overlayCanvasCtx = overlayCanvasEl.getContext('2d');
 
-    backgroundCanvasMaskCtx.fillStyle = this.options.fadeBackgroundColorHex || 'rgba(0, 0, 0, 1)';
-    backgroundCanvasMaskCtx.fillRect(
-      targetElBoundingClientRect.left - 10,
-      targetElBoundingClientRect.top - 10,
-      targetElBoundingClientRect.width + 20,
-      targetElBoundingClientRect.height + 20
+    // configura o canvas para que ocupe todo o viewport
+    // e se comporte corretamente independente do DPI do monitor
+    overlayCanvasEl.width = window.innerWidth * devicePixelRatio;
+    overlayCanvasEl.height = window.innerHeight * devicePixelRatio;
+    overlayCanvasCtx.scale(devicePixelRatio, devicePixelRatio);
+
+    // apaga conteúdo atual do canvas
+    overlayCanvasCtx.clearRect(
+      0,
+      0,
+      overlayCanvasEl.width,
+      overlayCanvasEl.height
+    );
+
+    // configura o canvas para desenhar o poligono que ficará sobre o elemento em foco
+    overlayCanvasCtx.fillStyle =
+      this.options.fadeBackgroundColorHex || 'rgba(0, 0, 0, 1)';
+    const cornerRadius = 10;
+    const rectX = targetElBoundingClientRect.left - 10 || 0;
+    const rectY = targetElBoundingClientRect.top - 10 || 0;
+    const rectWidth = targetElBoundingClientRect.width + 20;
+    const rectHeight = targetElBoundingClientRect.height + 20;
+
+    // configura o ctx para que os poligonos tenham cantos arredondados
+    overlayCanvasCtx.lineJoin = 'round';
+    overlayCanvasCtx.lineWidth = cornerRadius;
+
+    // desenha o contorno do poligono
+    overlayCanvasCtx.strokeRect(
+      rectX + cornerRadius / 2,
+      rectY + cornerRadius / 2,
+      rectWidth - cornerRadius,
+      rectHeight - cornerRadius
+    );
+    // desenha o preenchimento do poligono
+    overlayCanvasCtx.fillRect(
+      rectX + cornerRadius / 2,
+      rectY + cornerRadius / 2,
+      rectWidth - cornerRadius,
+      rectHeight - cornerRadius
+    );
+
+    // utiliza xor para conseguir fazer o efeito de 'negativo' no poligono
+    overlayCanvasCtx.globalCompositeOperation = 'xor';
+
+    // desenha o poligono que ocupara a tela inteira, fazendo com que o
+    // globalCompositeOperation === 'xor' exerça o papel desejado sobre o
+    // poligono que ficará sobre o elemento em foco
+    overlayCanvasCtx.fillStyle =
+      this.options.fadeBackgroundColorHex || 'rgba(0, 0, 0, 1)';
+    overlayCanvasCtx.fillRect(
+      0,
+      0,
+      overlayCanvasEl.width,
+      overlayCanvasEl.height
     );
   }
 
@@ -137,7 +240,7 @@ export class HopsctochWrapperService {
   /**
    * Sets options for running the tour.
    */
-  public configure(options: HopscotchConfigOption) {
+  public configure(options: HopscotchConfigOptions) {
     this.options = options;
     hopscotch.configure(this.options);
   }
